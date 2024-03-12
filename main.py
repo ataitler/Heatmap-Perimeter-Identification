@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 
 def main():
     pure_exploration_steps = 128
+    n_update_steps = 1
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transform = transforms.Compose([transforms.ToTensor()])
     env = PIEnv(map="data/heat_map_with_green.jpg", clean="data/heat_map.jpg")
@@ -19,7 +20,6 @@ def main():
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
         total_reward = 0
-        # env.render()
         state = transform(state).unsqueeze(0)
         for step in range(num_steps):
             action = Agent.sample_action(state, force_explore=(i_episode*num_steps < pure_exploration_steps))
@@ -47,7 +47,13 @@ def main():
             # If the episode is up, then start another one
             if done:
                 env.reset()
+
         print('Episode', i_episode , 'ended with reward:', total_reward)
+        for update in range(n_update_steps):
+            # Perform one step of the optimization (on the policy network)
+            print('\tUpdate step', update+1, '...... ', end='')
+            Agent.optimize_model()
+            print('Done')
 
     # Close the env
     env.close()
