@@ -10,6 +10,7 @@ def main():
     pure_exploration_steps = 128
     n_update_steps = 1
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print('Running on device:', device)
     transform = transforms.Compose([transforms.ToTensor()])
     env = PIEnv(map="data/heat_map_with_green.jpg", clean="data/heat_map.jpg")
 
