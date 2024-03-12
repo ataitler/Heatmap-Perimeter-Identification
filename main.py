@@ -7,29 +7,26 @@ import torch
 import torchvision.transforms as transforms
 
 def main():
+    pure_exploration_steps = 128
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transform = transforms.Compose([transforms.ToTensor()])
     env = PIEnv(map="data/heat_map_with_green.jpg", clean="data/heat_map.jpg")
-    num_actions = env.action_space.n
 
     Agent = DQNAgent(env.action_space.n)
 
-    num_episodes = 10
-    num_steps = 3
+    num_episodes = 200
+    num_steps = 15
     for i_episode in range(num_episodes):
-        print('##############################################')
-        print('############ Episode', i_episode+1, 'starting #############')
-        print('##############################################')
-        state, _ = env.reset(seed=42)
-        env.render()
-        sys.exit()
+        state, _ = env.reset(seed=20)
+        total_reward = 0
+        # env.render()
         state = transform(state).unsqueeze(0)
         for step in range(num_steps):
-            action = Agent.sample_action(state, force_explore=(i_episode*num_steps < 20))
+            action = Agent.sample_action(state, force_explore=(i_episode*num_steps < pure_exploration_steps))
 
             # apply the action
             obs, reward, terminated, truncated, _ = env.step(action.item())
-            print(action.item(), reward)
+            total_reward = total_reward + reward
             reward = torch.tensor([reward], device=device)
             done = terminated or truncated
 
@@ -50,16 +47,12 @@ def main():
             # If the episode is up, then start another one
             if done:
                 env.reset()
+        print('Episode', i_episode , 'ended with reward:', total_reward)
 
-        # Close the env
-        # env.render()
-        env.close()
+    # Close the env
+    env.close()
 
-
-
-    # cv2.imshow('Image with Convex Hull Around Perimeter Area', state)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    #plot the reward graph
 
 
 

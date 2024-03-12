@@ -95,8 +95,8 @@ class PIEnv(gymnasium.Env):
 
     def render(self):
         cv2.imshow('Image with Convex Hull Around Perimeter Area', self.state)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     def render2(self):
         vertices = []

@@ -26,7 +26,7 @@ class ReplayMemory(object):
         return len(self.memory)
 
 class DQNAgent(object):
-    def __init__(self, actions, batch_size=10, gamma=0.99, eps=0.1, lr=1e-4, tau=0.005, memory=10000, clip=100):
+    def __init__(self, actions, batch_size=128, gamma=0.99, eps=0.1, lr=1e-4, tau=0.005, memory=10000, clip=100):
         self.batch_size = batch_size
         self.gamma = gamma
         self.eps = eps
