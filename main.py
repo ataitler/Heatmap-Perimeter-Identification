@@ -15,7 +15,7 @@ def main():
     Agent = DQNAgent(env.action_space.n)
 
     num_episodes = 200
-    num_steps = 15
+    num_steps = 20
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
         total_reward = 0
