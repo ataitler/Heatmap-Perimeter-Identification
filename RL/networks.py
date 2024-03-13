@@ -12,9 +12,9 @@ class Model(nn.Module):
         self.conv1 = nn.Conv2d(in_c, 6, 5)
         self.conv2 = nn.Conv2d(6, 16, 5)
 
-        torch.nn.init.xavier_uniform(self.conv1.weight)
+        torch.nn.init.xavier_normal_(self.conv1.weight)
         self.conv1.bias.data.fill_(0.01)
-        torch.nn.init.xavier_uniform(self.conv2.weight)
+        torch.nn.init.xavier_normal_(self.conv2.weight)
         self.conv2.bias.data.fill_(0.01)
 
         self.adaPool = nn.AdaptiveAvgPool2d(5)
@@ -23,9 +23,9 @@ class Model(nn.Module):
         self.fc2 = nn.Linear(120, out)
         # self.fc3 = nn.Linear(84, out)
 
-        torch.nn.init.xavier_uniform(self.fc1.weight)
+        torch.nn.init.xavier_normal_(self.fc1.weight)
         self.fc1.bias.data.fill_(0.01)
-        torch.nn.init.xavier_uniform(self.fc2.weight)
+        torch.nn.init.xavier_normal_(self.fc2.weight)
         self.fc2.bias.data.fill_(0.01)
         # torch.nn.init.xavier_uniform(self.fc3.weight)
         # self.fc3.bias.data.fill_(0.01)

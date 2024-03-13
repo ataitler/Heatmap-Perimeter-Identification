@@ -6,9 +6,19 @@ from RL.DQN import DQNAgent
 import torch
 import torchvision.transforms as transforms
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--episodes', type=int, default=100)
+parser.add_argument('--steps', type=int, default=20)
+parser.add_argument('--updates', type=int, default=1)
+parser.add_argument('--explore', type=int, default=128)
+args = parser.parse_args()
+
 def main():
-    pure_exploration_steps = 128
-    n_update_steps = 5
+    pure_exploration_steps = args.explore
+    n_update_steps = args.updates
+    num_episodes = args.episodes
+    num_steps = args.steps
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print('Running on device:', device)
     transform = transforms.Compose([transforms.ToTensor()])
@@ -16,18 +26,18 @@ def main():
 
     Agent = DQNAgent(env.action_space.n)
 
-    num_episodes = 200
-    num_steps = 20
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
         state = transform(state).unsqueeze(0)
-        if device != "cpu":
+        if torch.cuda.is_available():
             state = state.cuda()
 
         total_reward = 0
         for step in range(num_steps):
             action = Agent.sample_action(state, force_explore=(i_episode*num_steps < pure_exploration_steps))
-
+            print((state.element_size()*state.nelement())/1024/1024, state.shape)
+            print(sys.getsizeof(action))
+            sys.exit()
             # apply the action
             obs, reward, terminated, truncated, _ = env.step(action.item())
             total_reward = total_reward + reward
@@ -38,7 +48,7 @@ def main():
                 next_state = None
             else:
                 next_state = transform(obs).unsqueeze(0)
-                if device != "cpu":
+                if torch.cuda.is_available():
                     next_state = next_state.cuda()
 
             # Store the transition in memory

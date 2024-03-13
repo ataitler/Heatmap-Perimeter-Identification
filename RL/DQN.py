@@ -40,7 +40,7 @@ class DQNAgent(object):
 
         self.policy_net = Model(out=actions)
         self.target_net = Model(out=actions)
-        if self.device != "cpu":
+        if torch.cuda.is_available():
             self.policy_net.cuda()
             self.target_net.cuda()
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -55,10 +55,10 @@ class DQNAgent(object):
             return torch.tensor([[random.randrange(self.num_actions)]], device=self.device, dtype=torch.int64)
         else:
             with torch.no_grad():
-                if self.device != "cpu":
-                    return self.policy_net(state).max(1).indices.view(1, 1).cuda()
-                else:
-                    return self.policy_net(state).max(1).indices.view(1, 1)
+                action = self.policy_net(state).max(1).indices.view(1, 1)
+                if torch.cuda.is_available():
+                    return action.cuda()
+                return action
 
     def store_transition(self, state, action, reward, next_state):
         self.memory.push(state, action, reward, next_state)
