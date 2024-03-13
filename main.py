@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 
 def main():
     pure_exploration_steps = 128
-    n_update_steps = 1
+    n_update_steps = 5
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print('Running on device:', device)
     transform = transforms.Compose([transforms.ToTensor()])
@@ -16,7 +16,7 @@ def main():
 
     Agent = DQNAgent(env.action_space.n)
 
-    num_episodes = 2
+    num_episodes = 200
     num_steps = 20
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
