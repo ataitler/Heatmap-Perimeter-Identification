@@ -11,6 +11,7 @@ parser.add_argument('--episodes', type=int, default=100)
 parser.add_argument('--steps', type=int, default=20)
 parser.add_argument('--updates', type=int, default=5)
 parser.add_argument('--explore', type=int, default=128)
+parser.add_argument('--batch', type=int, default=32)
 args = parser.parse_args()
 
 def main():
@@ -24,7 +25,7 @@ def main():
     transform = transforms.Compose([transforms.ToTensor()])
     env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
 
-    Agent = DQNAgent(env.action_space.n)
+    Agent = DQNAgent(action=env.action_space.n, batch_size=args.batch)
 
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
@@ -35,9 +36,7 @@ def main():
         total_reward = 0
         for step in range(num_steps):
             action = Agent.sample_action(state, force_explore=(i_episode*num_steps < pure_exploration_steps))
-            # print((state.element_size()*state.nelement())/1024/1024, state.shape)
-            # print(sys.getsizeof(action))
-            # sys.exit()
+
             # apply the action
             obs, reward, terminated, truncated, _ = env.step(action.item())
             total_reward = total_reward + reward
@@ -56,9 +55,6 @@ def main():
 
             # Move to the next state
             state = next_state
-
-            # Perform one step of the optimization (on the policy network)
-            Agent.optimize_model()
 
             # If the episode is up, then start another one
             if done:
