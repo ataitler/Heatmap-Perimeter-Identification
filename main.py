@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 parser = argparse.ArgumentParser()
 parser.add_argument('--episodes', type=int, default=100)
 parser.add_argument('--steps', type=int, default=20)
-parser.add_argument('--updates', type=int, default=1)
+parser.add_argument('--updates', type=int, default=5)
 parser.add_argument('--explore', type=int, default=128)
 args = parser.parse_args()
 
@@ -22,7 +22,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print('Running on device:', device)
     transform = transforms.Compose([transforms.ToTensor()])
-    env = PIEnv(map="data/heat_map_with_green.jpg", clean="data/heat_map.jpg")
+    env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
 
     Agent = DQNAgent(env.action_space.n)
 
@@ -35,9 +35,9 @@ def main():
         total_reward = 0
         for step in range(num_steps):
             action = Agent.sample_action(state, force_explore=(i_episode*num_steps < pure_exploration_steps))
-            print((state.element_size()*state.nelement())/1024/1024, state.shape)
-            print(sys.getsizeof(action))
-            sys.exit()
+            # print((state.element_size()*state.nelement())/1024/1024, state.shape)
+            # print(sys.getsizeof(action))
+            # sys.exit()
             # apply the action
             obs, reward, terminated, truncated, _ = env.step(action.item())
             total_reward = total_reward + reward
