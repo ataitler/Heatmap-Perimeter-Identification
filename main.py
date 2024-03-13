@@ -21,7 +21,10 @@ def main():
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
         total_reward = 0
-        state = transform(state).unsqueeze(0).cuda()
+        if device == "cuda":
+            state = transform(state).unsqueeze(0).cuda()
+        else:
+            state = transform(state).unsqueeze(0)
         for step in range(num_steps):
             action = Agent.sample_action(state, force_explore=(i_episode*num_steps < pure_exploration_steps))
 
@@ -34,7 +37,10 @@ def main():
             if terminated:
                 next_state = None
             else:
-                next_state = transform(obs).unsqueeze(0).cuda()
+                if device == "cuda":
+                    next_state = transform(obs).unsqueeze(0).cuda()
+                else:
+                    next_state = transform(obs).unsqueeze(0)
 
             # Store the transition in memory
             Agent.store_transition(state, action, reward, next_state)
