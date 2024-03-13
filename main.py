@@ -12,7 +12,7 @@ parser.add_argument('--steps', type=int, default=20)
 parser.add_argument('--updates', type=int, default=5)
 parser.add_argument('--explore', type=int, default=128)
 parser.add_argument('--batch', type=int, default=32)
-parser.add_argument('--verbose', type=bool, default=False)
+parser.add_argument('--verbose', type=bool, default=True)
 args = parser.parse_args()
 
 def main():
@@ -22,13 +22,15 @@ def main():
     num_steps = args.steps
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    transform = transforms.Compose([transforms.ToTensor()])
+
+    env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
+    Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch)
+
     if args.verbose:
         print('Running on device:', device)
-        print('Running for', args.episodes, 'with', args.steps, 'steps each. Batch size:', args.batch)
-    transform = transforms.Compose([transforms.ToTensor()])
-    env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
-
-    Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch)
+        print('Running for', args.episodes, 'episodes with', args.steps, 'steps each. Batch size:', args.batch)
+        print('GPU usage at start:', torch.cuda.memory_allocated())
 
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
@@ -64,6 +66,8 @@ def main():
                 env.reset()
 
         print('Episode', i_episode , 'ended with reward:', total_reward)
+        if args.verbose:
+            print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated())
         for update in range(n_update_steps):
             # Perform one step of the optimization (on the policy network)
             if args.verbose:

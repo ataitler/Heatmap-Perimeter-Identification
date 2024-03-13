@@ -1,6 +1,6 @@
 # Heatmap-Perimeter-Identification
 
-CC env setup
+## CC virtual environment setup
 1. module load StdEnv/2023
 2. module load opencv/4.9.0
 3. virtualenv --no-download venv_py311
