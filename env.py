@@ -7,7 +7,7 @@ from numpy.random import default_rng
 
 class PIEnv(gymnasium.Env):
 
-    def __init__(self, map, clean=None, regulaizer=1e-6):
+    def __init__(self, map, clean=None, regularizer=1e-6):
         # list of current vertices in the convex hull, key=id, value=bool
         self.convexhull = {}
         # list of all intersections key=idm value=(x,y)
@@ -15,8 +15,8 @@ class PIEnv(gymnasium.Env):
         # list of all intersection and whether they are part of the convex hull key=id, value=bool
         self.intersection_state_dict = {}
         self.state = None
-        # regulaizer for the reward - proportional to the size of the area added
-        self.regulaizer = regulaizer
+        # regularizer for the reward - proportional to the size of the area added
+        self.regularizer = regularizer
 
         image = cv2.imread(map)
         if clean is not None:
@@ -86,10 +86,6 @@ class PIEnv(gymnasium.Env):
         next_state = self._get_state()
         reward = self._get_reward(prev_convex_hull)
 
-        # cv2.imshow('Image with Convex Hull Around Perimeter Area', next_state)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
         self.state = next_state
         return next_state, reward, False, False, None
 
@@ -139,20 +135,8 @@ class PIEnv(gymnasium.Env):
         # draw convex hull
         convex_hull = cv2.convexHull(np.array(vertices))
         cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
-        # cv2.drawContours(new_map, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
-        # mask = np.zeros(new_map.shape, np.uint8)
-        # mask.fill(0)
-        # cv2.drawContours(mask, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
-
-        # draw intersection centroids with colors
-        # for int_id, cords in self.intersection_dict.items():
-        #     if self.intersection_state_dict[int_id]:
-        #         cv2.circle(new_map, cords, 5, (255, 255, 255), -1)
-        #     else:
-        #         cv2.circle(new_map, cords, 5, (0, 0, 0), -1)
 
         return new_map
-        # return mask
 
     def _get_reward(self, prev_convexhull):
         # old convex hull
@@ -162,7 +146,7 @@ class PIEnv(gymnasium.Env):
                 vertices.append(self.intersection_dict[vertex_id])
         convex_hull = cv2.convexHull(np.array(vertices))
         prev_mask = np.zeros(self.clean.shape, np.uint8)
-        # prev_mask.fill(0)
+
         cv2.drawContours(prev_mask, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
         prev_mask = cv2.cvtColor(prev_mask, cv2.COLOR_BGR2GRAY)
 
@@ -176,23 +160,15 @@ class PIEnv(gymnasium.Env):
         cv2.drawContours(curr_mask, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
         curr_mask = cv2.cvtColor(curr_mask, cv2.COLOR_BGR2GRAY)
 
-        # print("max prev: ", np.max(prev_mask), "max curr: ", np.max(curr_mask))
         diff = (curr_mask.astype(float) - prev_mask.astype(float)) / 255
 
         #calc reward: sum values / count values * sign - added count values * reg
         count_v = np.count_nonzero(diff)
-        sum_v = 0
         reward = 0
         if count_v > 0:
             sum_v = np.sum(self.heat_map * diff).astype(float)
-            reward = sum_v/count_v - (self.regulaizer * count_v)*np.sign(sum_v)
-        # count_v = np.count_nonzero(diff)
-        # reward = sum_v/count_v
-        # print(reward, (self.regulaizer * count_v)*np.sign(sum_v))
+            reward = sum_v/count_v - (self.regularizer * count_v)*np.sign(sum_v)
 
-
-        # print("diff1 - min: ", np.min(diff), "max: ", np.max(diff))
-        # print("diff2 - min: ", np.min(diff), "max: ", np.max(diff))
         return reward
 
     def _get_heatmap(self):
