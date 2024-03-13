@@ -6,9 +6,9 @@ import torch
 from RL.networks import Model
 import torch.optim as optim
 
-
 Transition = namedtuple('Transition',
                         ('state', 'action', 'reward', 'next_state'))
+
 
 class ReplayMemory(object):
 
@@ -25,8 +25,9 @@ class ReplayMemory(object):
     def __len__(self):
         return len(self.memory)
 
+
 class DQNAgent(object):
-    def __init__(self, actions, batch_size=128, gamma=0.99, eps=0.1, lr=1e-4, tau=0.005, memory=10000, clip=100):
+    def __init__(self, actions, batch_size=64, gamma=0.99, eps=0.1, lr=1e-4, tau=0.005, memory=10000, clip=100):
         self.batch_size = batch_size
         self.gamma = gamma
         self.eps = eps
@@ -47,7 +48,6 @@ class DQNAgent(object):
         self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=self.lr)
 
         self.memory = ReplayMemory(memory)
-
 
     def sample_action(self, state, force_explore=False):
         explore = random.random()
@@ -83,8 +83,6 @@ class DQNAgent(object):
         reward_batch = torch.cat(batch.reward)
 
         # Compute Q(s_t, a)
-        print("states tensor", state_batch.get_device())
-        print("actions tensor", action_batch.get_device())
         state_action_values = self.policy_net(state_batch).gather(1, action_batch)
         # Compute V(s_{t+1}) for all next states.
         next_state_values = torch.zeros(self.batch_size, device=self.device)
@@ -109,5 +107,6 @@ class DQNAgent(object):
         target_net_state_dict = self.target_net.state_dict()
         policy_net_state_dict = self.policy_net.state_dict()
         for key in policy_net_state_dict:
-            target_net_state_dict[key] = policy_net_state_dict[key] * self.tau + target_net_state_dict[key] * (1 - self.tau)
+            target_net_state_dict[key] = policy_net_state_dict[key] * self.tau + target_net_state_dict[key] * (
+                        1 - self.tau)
         self.target_net.load_state_dict(target_net_state_dict)
