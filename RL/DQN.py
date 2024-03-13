@@ -49,12 +49,11 @@ class DQNAgent(object):
     def sample_action(self, state, force_explore=False):
         explore = random.random()
         if explore <= self.eps or force_explore:
-            # return random.randrange(self.num_actions)
             return torch.tensor([[random.randrange(self.num_actions)]], device=self.device, dtype=torch.int64)
         else:
             with torch.no_grad():
-                if self.device == "cuda":
-                    return self.policy_net(state).max(1).indices.view(1,1).cuda()
+                if self.device != "cpu":
+                    return self.policy_net(state).max(1).indices.view(1, 1).cuda()
                 else:
                     return self.policy_net(state).max(1).indices.view(1, 1)
 
@@ -81,6 +80,8 @@ class DQNAgent(object):
         reward_batch = torch.cat(batch.reward)
 
         # Compute Q(s_t, a)
+        print("states tensor", state_batch.get_device())
+        print("actions tensor", action_batch.get_device())
         state_action_values = self.policy_net(state_batch).gather(1, action_batch)
         # Compute V(s_{t+1}) for all next states.
         next_state_values = torch.zeros(self.batch_size, device=self.device)
