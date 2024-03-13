@@ -39,9 +39,9 @@ class DQNAgent(object):
 
         self.policy_net = Model(out=actions)
         self.target_net = Model(out=actions)
-        if self.device == "cuda":
-            self.policy_net.to(self.device)
-            self.target_net.to(self.device)
+        if self.device != "cpu":
+            self.policy_net.cuda()
+            self.target_net.cuda()
         self.target_net.load_state_dict(self.policy_net.state_dict())
 
         self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=self.lr)
