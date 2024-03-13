@@ -53,7 +53,7 @@ class DQNAgent(object):
             return torch.tensor([[random.randrange(self.num_actions)]], device=self.device, dtype=torch.int64)
         else:
             with torch.no_grad():
-                return self.policy_net(state).max(1).indices.view(1,1)
+                return self.policy_net(state).max(1).indices.view(1,1).cuda()
 
     def store_transition(self, state, action, reward, next_state):
         self.memory.push(state, action, reward, next_state)

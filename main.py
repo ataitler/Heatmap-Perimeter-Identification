@@ -16,12 +16,12 @@ def main():
 
     Agent = DQNAgent(env.action_space.n)
 
-    num_episodes = 200
+    num_episodes = 2
     num_steps = 20
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
         total_reward = 0
-        state = transform(state).unsqueeze(0)
+        state = transform(state).unsqueeze(0).cuda()
         for step in range(num_steps):
             action = Agent.sample_action(state, force_explore=(i_episode*num_steps < pure_exploration_steps))
 
@@ -34,7 +34,7 @@ def main():
             if terminated:
                 next_state = None
             else:
-                next_state = transform(obs).unsqueeze(0)
+                next_state = transform(obs).unsqueeze(0).cuda()
 
             # Store the transition in memory
             Agent.store_transition(state, action, reward, next_state)
