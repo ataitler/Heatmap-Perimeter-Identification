@@ -20,6 +20,7 @@ def main():
     n_update_steps = args.updates
     num_episodes = args.episodes
     num_steps = args.steps
+    b2M = 1024*1024
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transform = transforms.Compose([transforms.ToTensor()])
@@ -30,7 +31,7 @@ def main():
     if args.verbose:
         print('Running on device:', device)
         print('Running for', args.episodes, 'episodes with', args.steps, 'steps each. Batch size:', args.batch)
-        print('GPU usage at start:', torch.cuda.memory_allocated())
+        print('GPU usage at start:', torch.cuda.memory_allocated()/b2M, "MB")
 
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
@@ -67,7 +68,7 @@ def main():
 
         print('Episode', i_episode , 'ended with reward:', total_reward)
         if args.verbose:
-            print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated())
+            print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated()/b2M, "MB")
         for update in range(n_update_steps):
             # Perform one step of the optimization (on the policy network)
             if args.verbose:
