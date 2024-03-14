@@ -32,6 +32,7 @@ def main():
         print('Running on device:', device)
         print('Running for', args.episodes, 'episodes with', args.steps, 'steps each. Batch size:', args.batch)
         print('GPU usage at start:', torch.cuda.memory_allocated()/b2M, "MB")
+        print('RB size at start:', Agent.get_buffer_size() / b2M, "MB")
 
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
@@ -69,6 +70,7 @@ def main():
         print('Episode', i_episode , 'ended with reward:', total_reward)
         if args.verbose:
             print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated()/b2M, "MB")
+            print('RB size after', i_episode, 'episodes:', Agent.get_buffer_size() / b2M, "MB with", Agent.get_buffer_len(), "elements")
         for update in range(n_update_steps):
             # Perform one step of the optimization (on the policy network)
             if args.verbose:

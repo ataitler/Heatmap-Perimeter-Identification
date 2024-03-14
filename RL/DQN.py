@@ -14,16 +14,24 @@ class ReplayMemory(object):
 
     def __init__(self, capacity):
         self.memory = deque([], maxlen=capacity)
+        self.allocated = 0
+        # self.head = 0
 
     def push(self, *args):
         """Save a transition"""
         self.memory.append(Transition(*args))
+        # self.head = self.head + 1
+        for e in args:
+            self.allocated += e.element_size() * e.nelement()
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
 
     def __len__(self):
         return len(self.memory)
+
+    def size_of(self):
+        return self.allocated
 
 
 class DQNAgent(object):
@@ -112,3 +120,9 @@ class DQNAgent(object):
             target_net_state_dict[key] = policy_net_state_dict[key] * self.tau + target_net_state_dict[key] * (
                         1 - self.tau)
         self.target_net.load_state_dict(target_net_state_dict)
+
+    def get_buffer_size(self):
+        return self.memory.size_of()
+
+    def get_buffer_len(self):
+        return len(self.memory)
