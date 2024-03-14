@@ -13,6 +13,7 @@ Transition = namedtuple('Transition',
 class ReplayMemory(object):
 
     def __init__(self, capacity):
+        self.max_capacity = capacity
         self.memory = deque([], maxlen=capacity)
         self.allocated = 0
         # self.head = 0
@@ -20,9 +21,9 @@ class ReplayMemory(object):
     def push(self, *args):
         """Save a transition"""
         self.memory.append(Transition(*args))
-        # self.head = self.head + 1
-        for e in args:
-            self.allocated += e.element_size() * e.nelement()
+        if len(self.memory) <= self.max_capacity:
+            for e in args:
+                self.allocated += e.element_size() * e.nelement()
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
