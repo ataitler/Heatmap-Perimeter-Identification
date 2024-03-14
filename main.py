@@ -13,6 +13,7 @@ parser.add_argument('--updates', type=int, default=5)
 parser.add_argument('--explore', type=int, default=128)
 parser.add_argument('--batch', type=int, default=32)
 parser.add_argument('--verbose', type=bool, default=True)
+parser.add_argument('--buffer', type=int, default=10000)
 args = parser.parse_args()
 
 def main():
@@ -26,7 +27,7 @@ def main():
     transform = transforms.Compose([transforms.ToTensor()])
 
     env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
-    Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch)
+    Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer)
 
     if args.verbose:
         print('Running on device:', device)
