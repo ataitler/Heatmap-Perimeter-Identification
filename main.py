@@ -12,7 +12,7 @@ parser.add_argument('--steps', type=int, default=20)
 parser.add_argument('--updates', type=int, default=5)
 parser.add_argument('--explore', type=int, default=128)
 parser.add_argument('--batch', type=int, default=32)
-parser.add_argument('--verbose', type=bool, default=True)
+parser.add_argument('--verbose', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--buffer', type=int, default=10000)
 args = parser.parse_args()
 
