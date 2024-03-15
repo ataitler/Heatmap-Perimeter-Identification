@@ -1,5 +1,6 @@
-import cv2
 import sys
+
+import cv2
 import gymnasium
 import numpy as np
 from numpy.random import default_rng
@@ -35,6 +36,7 @@ class PIEnv(gymnasium.Env):
         # Find contours of dark green dots within the red shape
         contours_dark_green, _ = cv2.findContours(mask_dark_green, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+        # find the center of each green contour and filter out noisy contours
         index = 0
         for c in contours_dark_green:
             try:
@@ -47,9 +49,11 @@ class PIEnv(gymnasium.Env):
             self.intersection_dict[index] = (cX, cY)
             index = index + 1
 
+        # update all intersections to be false - corresponding to empty convex hull
         for key, val in self.intersection_dict.items():
             self.intersection_state_dict[key] = False
 
+        # action space is an scalar integer representing the index of an intersection
         self.action_space = gymnasium.spaces.Discrete(len(self.intersection_dict))
 
 
@@ -71,6 +75,7 @@ class PIEnv(gymnasium.Env):
             self.convexhull[num] = True
             self.intersection_state_dict[num] = True
 
+        # generate the appropriate img state
         self.state = self._get_state()
         return self.state, {}
 
@@ -83,6 +88,7 @@ class PIEnv(gymnasium.Env):
             self.intersection_state_dict[action] = True
             self.convexhull[action] = True
 
+        # get new convex hull state and R(s,s')
         next_state = self._get_state()
         reward = self._get_reward(prev_convex_hull)
 
@@ -90,7 +96,55 @@ class PIEnv(gymnasium.Env):
         return next_state, reward, False, False, None
 
     def render(self):
-        cv2.imshow('Image with Convex Hull Around Perimeter Area', self.state)
+        """
+        Renders a viewable image of the city section with the current convex hull
+        :return:
+        The original clean image in RGB, and the contour of the convex hull drawn on it
+        """
+        vertices = []
+        for vertex_id, state in self.convexhull.items():
+            if state:
+                vertices.append(self.intersection_dict[vertex_id])
+
+        new_map = self.clean.copy()
+
+        # draw convex hull
+        convex_hull = cv2.convexHull(np.array(vertices))
+        cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
+
+        return new_map
+
+    def render_with_vertices(self):
+        """
+        enders a viewable image of the city section with the current convex hull and the intersections
+        :return:
+        The original clean image in RGB, and the contour of the convex hull drawn on it.
+        Additionally all the intersections are drawn as circles, white circles represent active intersections,
+        and black circles represents inactive intersections.
+        """
+        vertices = []
+        for vertex_id, state in self.convexhull.items():
+            if state:
+                vertices.append(self.intersection_dict[vertex_id])
+
+        new_map = self.clean.copy()
+
+        # draw convex hull
+        convex_hull = cv2.convexHull(np.array(vertices))
+        cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
+
+        # draw intersection centroids with colors
+        for int_id, cords in self.intersection_dict.items():
+            if self.intersection_state_dict[int_id]:
+                cv2.circle(new_map, cords, 5, (255, 255, 255), -1)
+            else:
+                cv2.circle(new_map, cords, 5, (0, 0, 0), -1)
+
+        return new_map
+
+
+    def show(self, map):
+        cv2.imshow('Image with Convex Hull Around Perimeter Area', map)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -105,10 +159,6 @@ class PIEnv(gymnasium.Env):
         # draw convex hull
         convex_hull = cv2.convexHull(np.array(vertices))
         cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
-        # cv2.drawContours(new_map, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
-        # mask = np.zeros(new_map.shape, np.uint8)
-        # mask.fill(0)
-        # cv2.drawContours(mask, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
 
         # draw intersection centroids with colors
         for int_id, cords in self.intersection_dict.items():
@@ -125,41 +175,75 @@ class PIEnv(gymnasium.Env):
         # return mask
 
     def _get_state(self):
+        """
+        Generates the state of the system
+        :return:
+        A 2 channel image, first channel the grayscale heat map, second channel the FILLED convex hull
+        """
+        ch_channel = np.zeros(self.heat_map.shape, np.float32)
+        heatmap_channel = self.heat_map.copy()
+        dots_channel = np.zeros(self.heat_map.shape, np.float32)
+
+        # Generate the convex hull mask
         vertices = []
         for vertex_id, state in self.convexhull.items():
             if state:
                 vertices.append(self.intersection_dict[vertex_id])
-
-        new_map = self.clean.copy()
-
-        # draw convex hull
         convex_hull = cv2.convexHull(np.array(vertices))
-        cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
+        cv2.drawContours(ch_channel, [convex_hull], -1, color=1, thickness=cv2.FILLED)
 
-        return new_map
+        # generate the dots mask
+        for int_id, cords in self.intersection_dict.items():
+            if self.intersection_state_dict[int_id]:
+                cv2.circle(dots_channel, cords, 5, color=1, thickness=-1)
+            else:
+                cv2.circle(dots_channel, cords, 5, color=-1, thickness=-1)
+
+        # print(ch_channel.shape, heatmap_channel.shape, dots_channel.shape)
+        state = np.stack((ch_channel, heatmap_channel, dots_channel),axis=0)
+        # print(state.shape)
+        # self.show(state)
+        return state
+
+        # vertices = []
+        # for vertex_id, state in self.convexhull.items():
+        #     if state:
+        #         vertices.append(self.intersection_dict[vertex_id])
+        #
+        # new_map = self.clean.copy()
+        #
+        # # draw convex hull
+        # convex_hull = cv2.convexHull(np.array(vertices))
+        # cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
+        #
+        # return new_map
 
     def _get_reward(self, prev_convexhull):
-        # old convex hull
+        # generate old convex hull
         vertices = []
         for vertex_id, state in prev_convexhull.items():
             if state:
                 vertices.append(self.intersection_dict[vertex_id])
         convex_hull = cv2.convexHull(np.array(vertices))
-        prev_mask = np.zeros(self.clean.shape, np.uint8)
 
+        # generate the mask of the old convex hull
+        prev_mask = np.zeros(self.clean.shape, np.uint8)
         cv2.drawContours(prev_mask, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
         prev_mask = cv2.cvtColor(prev_mask, cv2.COLOR_BGR2GRAY)
 
-        # new convex hull
+        # generate new convex hull
         vertices = []
         for vertex_id, state in self.convexhull.items():
             if state:
                 vertices.append(self.intersection_dict[vertex_id])
         convex_hull = cv2.convexHull(np.array(vertices))
+
+        # generate the mask of the new convex hull
         curr_mask = np.zeros(self.clean.shape, np.uint8)
         cv2.drawContours(curr_mask, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
         curr_mask = cv2.cvtColor(curr_mask, cv2.COLOR_BGR2GRAY)
 
+        # generate a difference map between the two convex hulls
         diff = (curr_mask.astype(float) - prev_mask.astype(float)) / 255
 
         #calc reward: sum values / count values * sign - added count values * reg
@@ -194,4 +278,3 @@ class PIEnv(gymnasium.Env):
         heat_map = mask * image_gray
         heat_map = heat_map.astype(float) / np.max(heat_map)
         return heat_map
-        # return mask * image_gray

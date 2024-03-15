@@ -4,7 +4,7 @@ import argparse
 from env import PIEnv
 from RL.DQN import DQNAgent
 import torch
-import torchvision.transforms as transforms
+# import torchvision.transforms as transforms
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--episodes', type=int, default=100)
@@ -24,7 +24,7 @@ def main():
     b2M = 1024*1024
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    transform = transforms.Compose([transforms.ToTensor()])
+    # transform = transforms.Compose([transforms.ToTensor()])
 
     env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
     Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer)
@@ -37,9 +37,11 @@ def main():
 
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
-        state = transform(state).unsqueeze(0)
-        if torch.cuda.is_available():
-            state = state.cuda()
+        state = torch.Tensor(state, device=device).unsqueeze(0)
+        # sys.exit()
+        # state = transform(state).unsqueeze(0)
+        # if torch.cuda.is_available():
+        #     state = state.cuda()
 
         total_reward = 0
         for step in range(num_steps):
@@ -54,9 +56,10 @@ def main():
             if terminated:
                 next_state = None
             else:
-                next_state = transform(obs).unsqueeze(0)
-                if torch.cuda.is_available():
-                    next_state = next_state.cuda()
+                next_state = torch.Tensor(obs, device=device).unsqueeze(0)
+                # next_state = transform(obs).unsqueeze(0)
+                # if torch.cuda.is_available():
+                #     next_state = next_state.cuda()
 
             # Store the transition in memory
             Agent.store_transition(state, action, reward, next_state)
