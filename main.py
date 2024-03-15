@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 from env import PIEnv
 from RL.DQN import DQNAgent
+from RL.log import Logger
 import torch
 # import torchvision.transforms as transforms
 
@@ -14,6 +15,7 @@ parser.add_argument('--explore', type=int, default=128)
 parser.add_argument('--batch', type=int, default=32)
 parser.add_argument('--verbose', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--buffer', type=int, default=10000)
+parser.add_argument('--log', type=str, default='log.txt')
 args = parser.parse_args()
 
 def main():
@@ -28,6 +30,7 @@ def main():
 
     env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
     Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer)
+    Log = Logger("logs/"+args.log)
 
     if args.verbose:
         print('Running on device:', device)
@@ -38,11 +41,8 @@ def main():
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
         state = torch.tensor(state, device=device).unsqueeze(0)
-        # sys.exit()
-        # state = transform(state).unsqueeze(0)
-        # if torch.cuda.is_available():
-        #     state = state.cuda()
-
+        actions = []
+        rewards = []
         total_reward = 0
         for step in range(num_steps):
             action = Agent.sample_action(state, force_explore=(i_episode*num_steps < pure_exploration_steps))
@@ -50,6 +50,8 @@ def main():
             # apply the action
             obs, reward, terminated, truncated, _ = env.step(action.item())
             total_reward = total_reward + reward
+            actions.append(action.item())
+            rewards.append(reward)
             reward = torch.tensor([reward], device=device)
             done = terminated or truncated
 
@@ -72,6 +74,7 @@ def main():
                 env.reset()
 
         print('Episode', i_episode+1 , 'ended with reward:', total_reward)
+        Log.log_episode(i_episode, actions, rewards)
         if args.verbose:
             print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated()/b2M, "MB")
             print('RB size after', i_episode, 'episodes:', Agent.get_buffer_size() / b2M, "MB with", Agent.get_buffer_len(), "elements")
