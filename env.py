@@ -271,14 +271,9 @@ class PIEnv(gymnasium.Env):
             cv2.drawContours(mask, [c], -1, 255, thickness=cv2.FILLED)
 
         heat_map = mask * image_gray
-        heat_map = heat_map.astype(float) / np.max(heat_map)
+        heat_map = heat_map.astype(np.float32) / np.max(heat_map)
         return heat_map
 
-    def save_agent_state(self, path):
-        pass
-
-    def load_agent_state(self, path):
-        pass
 
 
 

@@ -71,7 +71,7 @@ def main():
             if done:
                 env.reset()
 
-        print('Episode', i_episode , 'ended with reward:', total_reward)
+        print('Episode', i_episode+1 , 'ended with reward:', total_reward)
         if args.verbose:
             print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated()/b2M, "MB")
             print('RB size after', i_episode, 'episodes:', Agent.get_buffer_size() / b2M, "MB with", Agent.get_buffer_len(), "elements")

@@ -1,5 +1,6 @@
 from collections import namedtuple, deque
 import random
+import os
 
 import torch
 
@@ -127,3 +128,17 @@ class DQNAgent(object):
 
     def get_buffer_len(self):
         return len(self.memory)
+
+    def save_agent_state(self, checkpoint):
+        torch.save({
+            'policy_state_dict': self.policy_net.state_dict(),
+            'target_state_dict': self.target_net.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+        }, 'models/'+checkpoint)
+
+    def load_agent_state(self, checkpoint):
+        if os.path.exists('models/'+checkpoint):
+            checkpoint = torch.load('models/'+checkpoint)
+            self.policy_net.load_state_dict(checkpoint['policy_state_dict'])
+            self.target_net.load_state_dict(checkpoint['target_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
