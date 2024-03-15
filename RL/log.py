@@ -5,13 +5,11 @@ class Logger(object):
         fh.close()
 
     def log_episode(self, episode, actions, rewards):
-        str = ("######################\n"
-               "# Episode " + str(episode) + " \n"
-                                             "######################\n")
-        str += "step,action,reward\n"
+        msg = ("######################\n# Episode " + str(episode) + " \n######################\n")
+        msg += "step,action,reward\n"
         for i in range(len(actions)):
-            str += str(i) + "," + str(actions[i]) + "," + str(rewards[i]) + "\n"
+            msg += str(i) + "," + str(actions[i]) + "," + str(rewards[i]) + "\n"
 
         fh = open(self.file_name, 'a')
-        fh.write(str)
+        fh.write(msg)
         fh.close()
