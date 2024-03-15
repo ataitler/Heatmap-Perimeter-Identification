@@ -56,7 +56,6 @@ class PIEnv(gymnasium.Env):
         # action space is an scalar integer representing the index of an intersection
         self.action_space = gymnasium.spaces.Discrete(len(self.intersection_dict))
 
-
     def reset(self, seed=None):
 
         # reset all dictionaries
@@ -142,37 +141,36 @@ class PIEnv(gymnasium.Env):
 
         return new_map
 
-
-    def show(self, map):
-        cv2.imshow('Image with Convex Hull Around Perimeter Area', map)
+    def show(self, img):
+        cv2.imshow('Image', img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def render2(self):
-        vertices = []
-        for vertex_id, state in self.convexhull.items():
-            if state:
-                vertices.append(self.intersection_dict[vertex_id])
-
-        new_map = self.clean.copy()
-
-        # draw convex hull
-        convex_hull = cv2.convexHull(np.array(vertices))
-        cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
-
-        # draw intersection centroids with colors
-        for int_id, cords in self.intersection_dict.items():
-            if self.intersection_state_dict[int_id]:
-                cv2.circle(new_map, cords, 5, (255, 255, 255), -1)
-            else:
-                cv2.circle(new_map, cords, 5, (0, 0, 0), -1)
-
-        cv2.imshow('Image with Convex Hull Around Perimeter Area', new_map)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-        return new_map
-        # return mask
+    # def render2(self):
+    #     vertices = []
+    #     for vertex_id, state in self.convexhull.items():
+    #         if state:
+    #             vertices.append(self.intersection_dict[vertex_id])
+    #
+    #     new_map = self.clean.copy()
+    #
+    #     # draw convex hull
+    #     convex_hull = cv2.convexHull(np.array(vertices))
+    #     cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
+    #
+    #     # draw intersection centroids with colors
+    #     for int_id, cords in self.intersection_dict.items():
+    #         if self.intersection_state_dict[int_id]:
+    #             cv2.circle(new_map, cords, 5, (255, 255, 255), -1)
+    #         else:
+    #             cv2.circle(new_map, cords, 5, (0, 0, 0), -1)
+    #
+    #     cv2.imshow('Image with Convex Hull Around Perimeter Area', new_map)
+    #     cv2.waitKey(0)
+    #     cv2.destroyAllWindows()
+    #
+    #     return new_map
+    #     # return mask
 
     def _get_state(self):
         """
@@ -190,19 +188,16 @@ class PIEnv(gymnasium.Env):
             if state:
                 vertices.append(self.intersection_dict[vertex_id])
         convex_hull = cv2.convexHull(np.array(vertices))
-        cv2.drawContours(ch_channel, [convex_hull], -1, color=1, thickness=cv2.FILLED)
+        cv2.drawContours(ch_channel, [convex_hull], -1, color=1.0, thickness=cv2.FILLED)
 
         # generate the dots mask
         for int_id, cords in self.intersection_dict.items():
             if self.intersection_state_dict[int_id]:
-                cv2.circle(dots_channel, cords, 5, color=1, thickness=-1)
+                cv2.circle(dots_channel, cords, 5, color=1.0, thickness=-1)
             else:
-                cv2.circle(dots_channel, cords, 5, color=-1, thickness=-1)
+                cv2.circle(dots_channel, cords, 5, color=-1.0, thickness=-1)
 
-        # print(ch_channel.shape, heatmap_channel.shape, dots_channel.shape)
         state = np.stack((ch_channel, heatmap_channel, dots_channel),axis=0)
-        # print(state.shape)
-        # self.show(state)
         return state
 
         # vertices = []
@@ -278,3 +273,14 @@ class PIEnv(gymnasium.Env):
         heat_map = mask * image_gray
         heat_map = heat_map.astype(float) / np.max(heat_map)
         return heat_map
+
+    def save_agent_state(self, path):
+        pass
+
+    def load_agent_state(self, path):
+        pass
+
+
+
+
+

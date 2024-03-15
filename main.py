@@ -37,7 +37,7 @@ def main():
 
     for i_episode in range(num_episodes):
         state, _ = env.reset(seed=20)
-        state = torch.Tensor(state, device=device).unsqueeze(0)
+        state = torch.tensor(state, device=device).unsqueeze(0)
         # sys.exit()
         # state = transform(state).unsqueeze(0)
         # if torch.cuda.is_available():
@@ -56,7 +56,7 @@ def main():
             if terminated:
                 next_state = None
             else:
-                next_state = torch.Tensor(obs, device=device).unsqueeze(0)
+                next_state = torch.tensor(obs, device=device).unsqueeze(0)
                 # next_state = transform(obs).unsqueeze(0)
                 # if torch.cuda.is_available():
                 #     next_state = next_state.cuda()
