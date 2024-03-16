@@ -15,6 +15,7 @@ parser.add_argument('--explore', type=int, default=128)
 parser.add_argument('--batch', type=int, default=32)
 parser.add_argument('--verbose', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--buffer', type=int, default=10000)
+parser.add_argument('--lr', type=float, default=0.0001)
 parser.add_argument('--log', type=str, default=None)
 parser.add_argument('--tb', type=str, default=None)
 args = parser.parse_args()
@@ -30,7 +31,7 @@ def main():
     # transform = transforms.Compose([transforms.ToTensor()])
 
     env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
-    Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer)
+    Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer, lr=args.lr)
     Agent.set_logger(logs_name=args.log, tb_name=args.tb)
 
     if args.verbose:
