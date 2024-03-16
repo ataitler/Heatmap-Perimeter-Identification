@@ -75,9 +75,6 @@ def main():
                 env.reset()
 
         print('Episode', i_episode+1 , 'ended with reward:', total_reward)
-        # if (args.log is not None) or (args.tb is not None):
-        Agent.log(actions=actions, rewards=rewards)
-            # Log.log_episode(i_episode, actions, rewards)
         if args.verbose:
             print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated()/b2M, "MB")
             print('RB size after', i_episode, 'episodes:', Agent.get_buffer_size() / b2M, "MB with", Agent.get_buffer_len(), "elements")
@@ -88,6 +85,7 @@ def main():
             Agent.optimize_model()
             if args.verbose:
                 print('Done')
+        Agent.log(actions=actions, rewards=rewards)
 
     # Close the env
     env.close()
