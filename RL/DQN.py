@@ -4,11 +4,64 @@ import os
 
 import torch
 
-from RL.networks import Model
+from RL.networks import Simple, LeNet5
 import torch.optim as optim
+import torch.nn as nn
+from torch.utils.tensorboard import SummaryWriter
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'reward', 'next_state'))
+
+
+class Logger(object):
+    def __init__(self, file_name=None, tb_name=None):
+        self.logs_dir = "logs"
+        self.tb_dir = "runs"
+        self.file_name = None
+        if file_name is not None:
+            self.file_name = os.path.join(self.logs_dir, file_name)
+            fh = open(self.file_name, 'w+')
+            fh.close()
+        self.tb_name = None
+        if tb_name is not None:
+            self.tb_name = os.path.join(self.tb_dir, tb_name)
+            self.TBwriter = SummaryWriter(self.tb_name)
+
+    def log_episode(self, episode, actions, rewards, model):
+        if self.file_name is not None:
+            msg = ("######################\n# Episode " + str(episode) + " \n######################\n")
+            msg += "step,action,reward\n"
+            for i in range(len(actions)):
+                msg += str(i) + "," + str(actions[i]) + "," + str(rewards[i]) + "\n"
+
+            fh = open(self.file_name, 'a')
+            fh.write(msg)
+            fh.close()
+
+        if self.tb_name is not None:
+            total_reward = sum(rewards)
+            self.TBwriter.add_scalar('Reward', total_reward, episode)
+            conv_idx = 1
+            linear_idx = 1
+            for mod in model.modules():
+                if isinstance(mod, nn.Conv2d):
+                    weights = mod.weight
+                    weights_shape = weights.shape
+                    num_kernels = weights_shape[0]
+                    for k in range(num_kernels):
+                        flattened_weights = weights[k].flatten()
+                        tag = f"Conv2d_{conv_idx}/kernel_{k}"
+                        self.TBwriter.add_histogram(tag, flattened_weights, global_step=episode)
+                    conv_idx += 1
+                if isinstance(mod, nn.Linear):
+                    weights = mod.weight
+                    biases = mod.bias
+                    flattened_weights = weights.flatten()
+                    flattened_biases = biases.flatten()
+                    tag = f"Linear{linear_idx}"
+                    self.TBwriter.add_histogram(tag+'/weights', flattened_weights, global_step=episode)
+                    self.TBwriter.add_histogram(tag+'/bias', flattened_biases, global_step=episode)
+                    linear_idx += 1
 
 
 class ReplayMemory(object):
@@ -45,11 +98,15 @@ class DQNAgent(object):
         self.tau = tau
         self.num_actions = actions
         self.clip = clip
+        # self.log = False
+        self.log_episode = 1
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.policy_net = Model(out=actions)
-        self.target_net = Model(out=actions)
+        # self.policy_net = Model(out=actions)
+        # self.target_net = Model(out=actions)
+        self.policy_net = LeNet5(out=actions)
+        self.target_net = LeNet5(out=actions)
         if torch.cuda.is_available():
             self.policy_net.cuda()
             self.target_net.cuda()
@@ -128,6 +185,15 @@ class DQNAgent(object):
 
     def get_buffer_len(self):
         return len(self.memory)
+
+    def set_logger(self, logs_name=None, tb_name=None):
+        # self.log = True
+        self.Logger = Logger(file_name=logs_name, tb_name=tb_name)
+
+    def log(self, actions, rewards):
+        # log file + Tensorboard
+        self.Logger.log_episode(episode=self.log_episode, actions=actions, rewards=rewards, model=self.policy_net)
+        self.log_episode += 1
 
     def save_agent_state(self, checkpoint):
         torch.save({

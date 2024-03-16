@@ -3,19 +3,20 @@ import numpy as np
 import argparse
 from env import PIEnv
 from RL.DQN import DQNAgent
-from RL.log import Logger
+# from RL.log import Logger
 import torch
 # import torchvision.transforms as transforms
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--episodes', type=int, default=100)
-parser.add_argument('--steps', type=int, default=20)
+parser.add_argument('--episodes', type=int, default=10)
+parser.add_argument('--steps', type=int, default=2)
 parser.add_argument('--updates', type=int, default=5)
 parser.add_argument('--explore', type=int, default=128)
 parser.add_argument('--batch', type=int, default=32)
 parser.add_argument('--verbose', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--buffer', type=int, default=10000)
-parser.add_argument('--log', type=str, default='log.txt')
+parser.add_argument('--log', type=str, default=None)
+parser.add_argument('--tb', type=str, default=None)
 args = parser.parse_args()
 
 def main():
@@ -30,7 +31,7 @@ def main():
 
     env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg")
     Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer)
-    Log = Logger("logs/"+args.log)
+    Agent.set_logger(logs_name=args.log, tb_name=args.tb)
 
     if args.verbose:
         print('Running on device:', device)
@@ -74,7 +75,9 @@ def main():
                 env.reset()
 
         print('Episode', i_episode+1 , 'ended with reward:', total_reward)
-        Log.log_episode(i_episode, actions, rewards)
+        # if (args.log is not None) or (args.tb is not None):
+        Agent.log(actions=actions, rewards=rewards)
+            # Log.log_episode(i_episode, actions, rewards)
         if args.verbose:
             print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated()/b2M, "MB")
             print('RB size after', i_episode, 'episodes:', Agent.get_buffer_size() / b2M, "MB with", Agent.get_buffer_len(), "elements")
