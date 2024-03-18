@@ -67,7 +67,7 @@ class PIEnv(gymnasium.Env):
             rng = default_rng()
         else:
             rng = default_rng(seed=seed)
-        numbers = rng.choice(len(self.intersection_dict), size=10, replace=False)
+        numbers = rng.choice(len(self.intersection_dict), size=5, replace=False)
 
         self.convexhull = {}
         for num in numbers:
@@ -197,7 +197,7 @@ class PIEnv(gymnasium.Env):
             else:
                 cv2.circle(dots_channel, cords, 5, color=-1.0, thickness=-1)
 
-        state = np.stack((ch_channel, heatmap_channel, dots_channel),axis=0)
+        state = np.stack((ch_channel, heatmap_channel, dots_channel), axis=0)
         return state
 
         # vertices = []

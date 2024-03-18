@@ -41,7 +41,10 @@ def main():
         print('RB size at start:', Agent.get_buffer_size() / b2M, "MB")
 
     for i_episode in range(num_episodes):
-        state, _ = env.reset(seed=20)
+        # state, _ = env.reset(seed=20)
+        state, _ = env.reset(seed=29)
+        env.show(env.render_with_vertices())
+        sys.exit()
         state = torch.tensor(state, device=device).unsqueeze(0)
         actions = []
         rewards = []
