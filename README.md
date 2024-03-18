@@ -15,5 +15,17 @@
 1. Model save and load
 2. RB save and load
 3. reward plot at the end
-4. Tensorboard
+4. Tensorboard - add gradients
+5. new image with less circles
+6. __do not allow less than 3 circles__
 
+
+Load tensorboard 
+in batch script:
+```bash
+tensorboard --logdir=runs --host 0.0.0.0 --load_fast false &
+```
+in local shell:
+```shell
+ssh -N -f -L localhost:6006:<node from sq>:6006 ataitler@cedar.computecanada.ca
+```
