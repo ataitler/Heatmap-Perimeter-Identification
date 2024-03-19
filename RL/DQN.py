@@ -119,7 +119,8 @@ class DQNAgent(object):
     def sample_action(self, state, force_explore=False):
         explore = random.random()
         if explore <= self.eps or force_explore:
-            return torch.tensor([[random.randrange(self.num_actions)]], device=self.device, dtype=torch.int64)
+            return torch.tensor([[random.randrange(self.num_actions)]], dtype=torch.int64)
+            # return torch.tensor([[random.randrange(self.num_actions)]], device=self.device, dtype=torch.int64)
         else:
             if torch.cuda.is_available():
                 state = state.cuda()
