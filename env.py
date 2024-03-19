@@ -225,8 +225,16 @@ class PIEnv(gymnasium.Env):
         # generate the mask of the old convex hull
         prev_mask = np.zeros(self.clean.shape, np.uint8)
         cv2.drawContours(prev_mask, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
-        prev_mask = cv2.cvtColor(prev_mask, cv2.COLOR_BGR2GRAY)
+        prev_mask = cv2.cvtColor(prev_mask, cv2.COLOR_BGR2GRAY) / 255.0
 
+        # Calculate the value function of V(s_t)
+        count_v = np.count_nonzero(prev_mask)
+        value_prev = 0
+        if count_v > 0:
+            sum_v = np.sum(self.heat_map * prev_mask)
+            value_prev = sum_v / count_v - (self.regularizer * count_v)
+
+        ############################
         # generate new convex hull
         vertices = []
         for vertex_id, state in self.convexhull.items():
@@ -237,17 +245,27 @@ class PIEnv(gymnasium.Env):
         # generate the mask of the new convex hull
         curr_mask = np.zeros(self.clean.shape, np.uint8)
         cv2.drawContours(curr_mask, [convex_hull], -1, color=(255, 255, 255), thickness=cv2.FILLED)
-        curr_mask = cv2.cvtColor(curr_mask, cv2.COLOR_BGR2GRAY)
+        curr_mask = cv2.cvtColor(curr_mask, cv2.COLOR_BGR2GRAY) / 255.0
+
+        # Calculate the value function of V(s_{t+1})
+        count_v = np.count_nonzero(curr_mask)
+        value_curr = 0
+        if count_v > 0:
+            sum_v = np.sum(self.heat_map * curr_mask)
+            value_curr = sum_v / count_v - (self.regularizer * count_v)
+
+        # r_t = V(s_{t+1}) - V(s_t)
+        reward = value_curr - value_prev
 
         # generate a difference map between the two convex hulls
-        diff = (curr_mask.astype(float) - prev_mask.astype(float)) / 255
+        # diff = (curr_mask.astype(float) - prev_mask.astype(float)) / 255
 
         #calc reward: sum values / count values * sign - added count values * reg
-        count_v = np.count_nonzero(diff)
-        reward = 0
-        if count_v > 0:
-            sum_v = np.sum(self.heat_map * diff).astype(float)
-            reward = sum_v/count_v - (self.regularizer * count_v)*np.sign(sum_v)
+        # count_v = np.count_nonzero(diff)
+        # reward = 0
+        # if count_v > 0:
+        #     sum_v = np.sum(self.heat_map * diff).astype(float)
+        #     reward = sum_v/count_v - (self.regularizer * count_v)*np.sign(sum_v)
 
         return reward
 

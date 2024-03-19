@@ -19,6 +19,7 @@ parser.add_argument('--lr', type=float, default=0.0001)
 parser.add_argument('--log', type=str, default=None)
 parser.add_argument('--log_ratio', type=int, default=1)
 parser.add_argument('--tb', type=str, default=None)
+parser.add_argument('--reg', type=float, default=0.000001)
 args = parser.parse_args()
 
 def main():
@@ -33,7 +34,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # transform = transforms.Compose([transforms.ToTensor()])
 
-    env = PIEnv(map="data/rsz_heat_map_with_green2.jpg", clean="data/rsz_heat_map.jpg")
+    env = PIEnv(map="data/rsz_heat_map_with_green2.jpg", clean="data/rsz_heat_map.jpg", regularizer=args.reg)
     Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer, lr=args.lr)
     Agent.set_logger(logs_name=args.log, tb_name=args.tb)
 
