@@ -81,8 +81,9 @@ class PIEnv(gymnasium.Env):
     def step(self, action):
         prev_convex_hull = self.convexhull.copy()
         if self.intersection_state_dict[action]:
-            self.intersection_state_dict[action] = False
-            del self.convexhull[action]
+            if len(self.convexhull) > 3:
+                self.intersection_state_dict[action] = False
+                del self.convexhull[action]
         else:
             self.intersection_state_dict[action] = True
             self.convexhull[action] = True
