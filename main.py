@@ -8,8 +8,8 @@ import torch
 # import torchvision.transforms as transforms
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--episodes', type=int, default=10)
-parser.add_argument('--steps', type=int, default=2)
+parser.add_argument('--episodes', type=int, default=50)
+parser.add_argument('--steps', type=int, default=10)
 parser.add_argument('--updates', type=int, default=5)
 parser.add_argument('--explore', type=int, default=128)
 parser.add_argument('--batch', type=int, default=32)
@@ -43,7 +43,8 @@ def main():
     for i_episode in range(num_episodes):
         # state, _ = env.reset(seed=20)
         state, _ = env.reset(seed=29)
-        state = torch.tensor(state, device=device).unsqueeze(0)
+        # state = torch.tensor(state, device=device).unsqueeze(0)
+        state = torch.tensor(state).unsqueeze(0)
         actions = []
         rewards = []
         total_reward = 0
@@ -55,13 +56,15 @@ def main():
             total_reward = total_reward + reward
             actions.append(action.item())
             rewards.append(reward)
-            reward = torch.tensor([reward], device=device)
+            # reward = torch.tensor([reward], device=device)
+            reward = torch.tensor([reward])
             done = terminated or truncated
 
             if terminated:
                 next_state = None
             else:
-                next_state = torch.tensor(obs, device=device).unsqueeze(0)
+                # next_state = torch.tensor(obs, device=device).unsqueeze(0)
+                next_state = torch.tensor(obs).unsqueeze(0)
                 # next_state = transform(obs).unsqueeze(0)
                 # if torch.cuda.is_available():
                 #     next_state = next_state.cuda()
@@ -76,9 +79,9 @@ def main():
             if done:
                 env.reset()
 
-        print('Episode', i_episode+1 , 'ended with reward:', total_reward)
+        print('Episode', i_episode+1, 'ended with reward:', total_reward)
         if args.verbose:
-            print('GPU usage after',i_episode, 'episodes:', torch.cuda.memory_allocated()/b2M, "MB")
+            print('GPU usage after', i_episode, 'episodes:', torch.cuda.memory_allocated()/b2M, "MB")
             print('RB size after', i_episode, 'episodes:', Agent.get_buffer_size() / b2M, "MB with", Agent.get_buffer_len(), "elements")
         for update in range(n_update_steps):
             # Perform one step of the optimization (on the policy network)

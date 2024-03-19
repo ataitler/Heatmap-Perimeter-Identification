@@ -121,10 +121,12 @@ class DQNAgent(object):
         if explore <= self.eps or force_explore:
             return torch.tensor([[random.randrange(self.num_actions)]], device=self.device, dtype=torch.int64)
         else:
+            if torch.cuda.is_available():
+                state = state.cuda()
             with torch.no_grad():
                 action = self.policy_net(state).max(1).indices.view(1, 1)
                 if torch.cuda.is_available():
-                    return action.cuda()
+                    return action.cpu()
                 return action
 
     def store_transition(self, state, action, reward, next_state):
@@ -149,6 +151,12 @@ class DQNAgent(object):
         action_batch = torch.cat(batch.action)
         reward_batch = torch.cat(batch.reward)
         next_batch = torch.cat(batch.next_state)
+
+        if torch.cuda.is_available():
+            state_batch = state_batch.cuda()
+            action_batch = action_batch.cuda()
+            reward_batch = reward_batch.cuda()
+            next_batch = next_batch.cuda()
 
         # Compute Q(s_t, a)
         state_action_values = self.policy_net(state_batch).gather(1, action_batch)
