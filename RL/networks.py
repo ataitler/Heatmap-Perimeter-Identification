@@ -61,7 +61,7 @@ class LeNet5(nn.Module):
             nn.AdaptiveAvgPool2d(4))
         self.fc1 = nn.Linear(32*4*4, 128)
         self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(512, out)
+        self.fc2 = nn.Linear(128, out)
 
     def forward(self, x):
         out = self.layer1(x)
