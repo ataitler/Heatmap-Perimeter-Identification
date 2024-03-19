@@ -199,10 +199,10 @@ class DQNAgent(object):
         # self.log = True
         self.Logger = Logger(file_name=logs_name, tb_name=tb_name)
 
-    def log(self, actions, rewards):
+    def log(self, actions, rewards, ratio=1):
         # log file + Tensorboard
         self.Logger.log_episode(episode=self.log_episode, actions=actions, rewards=rewards, model=self.policy_net)
-        self.log_episode += 1
+        self.log_episode += ratio
 
     def save_agent_state(self, checkpoint):
         torch.save({

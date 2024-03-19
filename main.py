@@ -8,15 +8,16 @@ import torch
 # import torchvision.transforms as transforms
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--episodes', type=int, default=50)
+parser.add_argument('--episodes', type=int, default=15)
 parser.add_argument('--steps', type=int, default=10)
-parser.add_argument('--updates', type=int, default=5)
+parser.add_argument('--updates', type=int, default=1)
 parser.add_argument('--explore', type=int, default=128)
 parser.add_argument('--batch', type=int, default=32)
 parser.add_argument('--verbose', type=bool, action=argparse.BooleanOptionalAction, default=False)
 parser.add_argument('--buffer', type=int, default=10000)
 parser.add_argument('--lr', type=float, default=0.0001)
 parser.add_argument('--log', type=str, default=None)
+parser.add_argument('--log_ratio', type=int, default=1)
 parser.add_argument('--tb', type=str, default=None)
 args = parser.parse_args()
 
@@ -26,6 +27,8 @@ def main():
     num_episodes = args.episodes
     num_steps = args.steps
     b2M = 1024*1024
+    # print(args.log_ratio)
+    # sys.exit()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # transform = transforms.Compose([transforms.ToTensor()])
@@ -90,7 +93,8 @@ def main():
             Agent.optimize_model()
             if args.verbose:
                 print('Done')
-        Agent.log(actions=actions, rewards=rewards)
+        if (i_episode) % args.log_ratio == 0:
+            Agent.log(actions=actions, rewards=rewards, ratio=args.log_ratio)
 
     # Close the env
     env.close()
