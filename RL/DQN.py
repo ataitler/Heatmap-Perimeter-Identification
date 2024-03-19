@@ -14,10 +14,11 @@ Transition = namedtuple('Transition',
 
 
 class Logger(object):
-    def __init__(self, file_name=None, tb_name=None):
+    def __init__(self, file_name=None, tb_name=None, just_reward=True):
         self.logs_dir = "logs"
         self.tb_dir = "runs"
         self.file_name = None
+        self.just_reward = just_reward
         if file_name is not None:
             self.file_name = os.path.join(self.logs_dir, file_name)
             fh = open(self.file_name, 'w+')
@@ -43,25 +44,26 @@ class Logger(object):
             self.TBwriter.add_scalar('Reward', total_reward, episode)
             conv_idx = 1
             linear_idx = 1
-            for mod in model.modules():
-                if isinstance(mod, nn.Conv2d):
-                    weights = mod.weight
-                    weights_shape = weights.shape
-                    num_kernels = weights_shape[0]
-                    for k in range(num_kernels):
-                        flattened_weights = weights[k].flatten()
-                        tag = f"Conv2d_{conv_idx}/kernel_{k}"
-                        self.TBwriter.add_histogram(tag, flattened_weights, global_step=episode)
-                    conv_idx += 1
-                if isinstance(mod, nn.Linear):
-                    weights = mod.weight
-                    biases = mod.bias
-                    flattened_weights = weights.flatten()
-                    flattened_biases = biases.flatten()
-                    tag = f"Linear{linear_idx}"
-                    self.TBwriter.add_histogram(tag+'/weights', flattened_weights, global_step=episode)
-                    self.TBwriter.add_histogram(tag+'/bias', flattened_biases, global_step=episode)
-                    linear_idx += 1
+            if not self.just_reward:
+                for mod in model.modules():
+                    if isinstance(mod, nn.Conv2d):
+                        weights = mod.weight
+                        weights_shape = weights.shape
+                        num_kernels = weights_shape[0]
+                        for k in range(num_kernels):
+                            flattened_weights = weights[k].flatten()
+                            tag = f"Conv2d_{conv_idx}/kernel_{k}"
+                            self.TBwriter.add_histogram(tag, flattened_weights, global_step=episode)
+                        conv_idx += 1
+                    if isinstance(mod, nn.Linear):
+                        weights = mod.weight
+                        biases = mod.bias
+                        flattened_weights = weights.flatten()
+                        flattened_biases = biases.flatten()
+                        tag = f"Linear{linear_idx}"
+                        self.TBwriter.add_histogram(tag+'/weights', flattened_weights, global_step=episode)
+                        self.TBwriter.add_histogram(tag+'/bias', flattened_biases, global_step=episode)
+                        linear_idx += 1
 
 
 class ReplayMemory(object):
@@ -198,9 +200,9 @@ class DQNAgent(object):
     def get_buffer_len(self):
         return len(self.memory)
 
-    def set_logger(self, logs_name=None, tb_name=None):
+    def set_logger(self, logs_name=None, tb_name=None, slim_log=True):
         # self.log = True
-        self.Logger = Logger(file_name=logs_name, tb_name=tb_name)
+        self.Logger = Logger(file_name=logs_name, tb_name=tb_name, just_reward=slim_log)
 
     def log(self, actions, rewards, ratio=1):
         # log file + Tensorboard
