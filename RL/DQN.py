@@ -165,14 +165,17 @@ class DQNAgent(object):
         # next_state_values = torch.zeros(self.batch_size, device=self.device)
         with torch.no_grad():
             # next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1).values
-            next_state_values = self.target_net(next_batch).max(1).values
+            next_state_values = self.target_net(next_batch).gather(1, self.policy_net(next_batch).max(1).indices.unsqueeze(1))
+            next_state_values2 = self.target_net(next_batch).max(1).values
 
         # Compute the expected Q values
-        expected_state_action_values = (next_state_values * self.gamma) + reward_batch
+        expected_state_action_values = (next_state_values * self.gamma) + reward_batch.unsqueeze(1)
+        # expected_state_action_values = (next_state_values2 * self.gamma) + reward_batch
 
         # Compute Huber loss
         criterion = torch.nn.SmoothL1Loss()
-        loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+        # loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
+        loss = criterion(state_action_values, expected_state_action_values)
 
         # Optimize the model
         self.optimizer.zero_grad()
