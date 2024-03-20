@@ -58,10 +58,11 @@ class LeNet5(nn.Module):
             nn.Conv2d(16, 32, kernel_size=5, stride=1, padding=0),
             nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.AdaptiveAvgPool2d(4))
-        self.fc1 = nn.Linear(32*4*4, 128)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(128, out)
+            nn.AdaptiveAvgPool2d(8))
+        self.fc1 = nn.Linear(32*8*8, out)
+        # self.fc1 = nn.Linear(32*4*4, 128)
+        # self.relu = nn.ReLU()
+        # self.fc2 = nn.Linear(128, out)
 
     def forward(self, x):
         out = self.layer1(x)
@@ -70,6 +71,6 @@ class LeNet5(nn.Module):
         out = self.layer4(out)
         out = out.reshape(out.size(0), -1)
         out = self.fc1(out)
-        out = self.relu(out)
-        out = self.fc2(out)
+        # out = self.relu(out)
+        # out = self.fc2(out)
         return out
