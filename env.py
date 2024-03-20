@@ -27,6 +27,7 @@ class PIEnv(gymnasium.Env):
 
         ### find the red zone
         self.heat_map = self._get_heatmap()
+        self.normalizer = self.heat_map.size / 100
 
         ## find the green zones and their coordinates
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -228,11 +229,14 @@ class PIEnv(gymnasium.Env):
         prev_mask = cv2.cvtColor(prev_mask, cv2.COLOR_BGR2GRAY) / 255.0
 
         # Calculate the value function of V(s_t)
-        count_v = np.count_nonzero(prev_mask)
+        count_v = np.count_nonzero(prev_mask)# * self.heat_map_mean / 2
         value_prev = 0
+        relevant = self.heat_map * prev_mask
         if count_v > 0:
-            sum_v = np.sum(self.heat_map * prev_mask)
-            value_prev = sum_v / count_v - (self.regularizer * count_v)
+            sum_v = np.sum(relevant) * np.average(relevant)
+            value_prev = sum_v
+            # value_prev = sum_v / count_v - (self.regularizer * count_v)
+            # print(sum_v, count_v, value_prev)
 
         ############################
         # generate new convex hull
@@ -248,14 +252,17 @@ class PIEnv(gymnasium.Env):
         curr_mask = cv2.cvtColor(curr_mask, cv2.COLOR_BGR2GRAY) / 255.0
 
         # Calculate the value function of V(s_{t+1})
-        count_v = np.count_nonzero(curr_mask)
+        count_v = np.count_nonzero(curr_mask)# * self.heat_map_mean / 2
         value_curr = 0
+        relevant = self.heat_map * curr_mask
         if count_v > 0:
-            sum_v = np.sum(self.heat_map * curr_mask)
-            value_curr = sum_v / count_v - (self.regularizer * count_v)
+            sum_v = np.sum(relevant) * np.average(relevant)
+            value_curr = sum_v
+            # value_curr = sum_v / count_v - (self.regularizer * count_v)
+            # print(sum_v, count_v, value_curr)
 
         # r_t = V(s_{t+1}) - V(s_t)
-        reward = value_curr - value_prev
+        reward = (value_curr - value_prev) / self.normalizer
 
         # generate a difference map between the two convex hulls
         # diff = (curr_mask.astype(float) - prev_mask.astype(float)) / 255
@@ -289,8 +296,11 @@ class PIEnv(gymnasium.Env):
                 continue
             cv2.drawContours(mask, [c], -1, 255, thickness=cv2.FILLED)
 
-        heat_map = mask * image_gray
+        heat_map = (mask / 255.0) * (image_gray / 255.0)
         heat_map = heat_map.astype(np.float32) / np.max(heat_map)
+        heat_map2 = -(heat_map - 1) - (heat_map==0).astype(float)
+        heat_map2 = heat_map2 / np.max(heat_map2)
+
         return heat_map
 
 
