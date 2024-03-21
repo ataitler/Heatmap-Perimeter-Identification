@@ -3,10 +3,24 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class Simple(nn.Module):
+class SimpleMLP(nn.Module):
+    def __init__(self, in_c=10, out=10):
+        super(SimpleMLP, self).__init__()
+        self.Linear1 = nn.Linear(in_c, int(in_c/10))
+        self.Linear2 = nn.Linear(int(in_c/10), int(in_c/100))
+        self.Linear3 = nn.Linear(int(in_c/100), out)
+
+    def forward(self, x):
+        out = F.relu(self.Linear1(x))
+        out = F.relu(self.Linear2(out))
+        out = self.Linear3(out)
+        return out
+
+
+class SimpleCNN(nn.Module):
 
     def __init__(self, in_c=3, out=10):
-        super(Model, self).__init__()
+        super(SimpleCNN, self).__init__()
         # 3 input image channels, 6 output channels, 5x5 square convolution
         # kernel
         self.conv1 = nn.Conv2d(in_c, 6, 5)

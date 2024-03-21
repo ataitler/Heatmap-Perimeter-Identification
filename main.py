@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from env import PIEnv
 from RL.DQN import DQNAgent
-# from RL.log import Logger
+from RL.networks import SimpleMLP
 import torch
 # import torchvision.transforms as transforms
 
@@ -38,6 +38,7 @@ def main():
     env = PIEnv(map="data/rsz_heat_map_with_green2.jpg", clean="data/rsz_heat_map.jpg", regularizer=args.reg)
     Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer, lr=args.lr)
     Agent.set_logger(logs_name=args.log, tb_name=args.tb, slim_log=args.slim_log)
+    # Agent.set_network(SimpleMLP, env.heat_map)
 
     if args.verbose:
         print('Running on device:', device)

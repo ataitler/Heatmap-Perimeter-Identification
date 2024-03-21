@@ -20,8 +20,10 @@ class PIEnv(gymnasium.Env):
         self.regularizer = regularizer
 
         image = cv2.imread(map)
+        image = cv2.resize(image, (0, 0), fx=0.5, fy=0.5)
         if clean is not None:
             self.clean = cv2.imread(clean)
+            self.clean = cv2.resize(self.clean, (0, 0), fx=0.5, fy=0.5)
         else:
             self.clean = image.copy()
 
