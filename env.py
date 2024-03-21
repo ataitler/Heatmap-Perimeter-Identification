@@ -199,7 +199,11 @@ class PIEnv(gymnasium.Env):
             else:
                 cv2.circle(dots_channel, cords, 5, color=-1.0, thickness=-1)
 
-        state = np.stack((ch_channel, heatmap_channel, dots_channel), axis=0)
+        # state = np.stack((ch_channel, heatmap_channel, dots_channel), axis=0)
+
+        state = ch_channel * heatmap_channel
+        state = np.expand_dims(state, 0)
+        # self.show(state)
         return state
 
         # vertices = []

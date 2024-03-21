@@ -107,8 +107,8 @@ class DQNAgent(object):
 
         # self.policy_net = Model(out=actions)
         # self.target_net = Model(out=actions)
-        self.policy_net = LeNet5(out=actions)
-        self.target_net = LeNet5(out=actions)
+        self.policy_net = LeNet5(in_c=1, out=actions)
+        self.target_net = LeNet5(in_c=1, out=actions)
         if torch.cuda.is_available():
             self.policy_net.cuda()
             self.target_net.cuda()
