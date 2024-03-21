@@ -11,7 +11,8 @@ class SimpleMLP(nn.Module):
         self.Linear3 = nn.Linear(int(in_c/100), out)
 
     def forward(self, x):
-        out = F.relu(self.Linear1(x))
+        out = x.flatten(1)
+        out = F.relu(self.Linear1(out))
         out = F.relu(self.Linear2(out))
         out = self.Linear3(out)
         return out
@@ -19,7 +20,7 @@ class SimpleMLP(nn.Module):
 
 class SimpleCNN(nn.Module):
 
-    def __init__(self, in_c=3, out=10):
+    def __init__(self, in_c=1, out=10):
         super(SimpleCNN, self).__init__()
         # 3 input image channels, 6 output channels, 5x5 square convolution
         # kernel

@@ -4,7 +4,7 @@ import os
 
 import torch
 
-from RL.networks import LeNet5, SimpleMLP
+from RL.networks import LeNet5, SimpleMLP, SimpleCNN
 import torch.optim as optim
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
@@ -106,25 +106,30 @@ class DQNAgent(object):
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.policy_net = LeNet5(in_c=1, out=actions)
-        self.target_net = LeNet5(in_c=1, out=actions)
-        if torch.cuda.is_available():
-            self.policy_net.cuda()
-            self.target_net.cuda()
-        self.target_net.load_state_dict(self.policy_net.state_dict())
-
-        self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=self.lr)
+        # self.policy_net = LeNet5(in_c=1, out=actions)
+        # self.target_net = LeNet5(in_c=1, out=actions)
+        # if torch.cuda.is_available():
+        #     self.policy_net.cuda()
+        #     self.target_net.cuda()
+        # self.target_net.load_state_dict(self.policy_net.state_dict())
+        #
+        # self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=self.lr)
 
         self.memory = ReplayMemory(memory)
 
     def set_network(self, network, input=None):
-        in_dim = 3
-        if network.__name__ == "LeNet5":
+        in_dim = 1
+        if network == "LeNet5":
             in_dim = 1
-        elif network.__name__ == "SimpleMLP":
+            network = LeNet5
+        elif network == "SimpleMLP":
             if input is None:
                 raise Exception("input dimension is missing")
             in_dim = input.size
+            network = SimpleMLP
+        else:
+            print("Network", network, "is unrecognized, continuing with SimpleCNN")
+            network = SimpleCNN
         self.policy_net = network(in_c=in_dim, out=self.actions)
         self.target_net = network(in_c=in_dim, out=self.actions)
         if torch.cuda.is_available():

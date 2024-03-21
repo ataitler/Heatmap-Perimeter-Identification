@@ -21,6 +21,7 @@ parser.add_argument('--log_ratio', type=int, default=1)
 parser.add_argument('--slim_log', type=bool, action=argparse.BooleanOptionalAction, default=True)
 parser.add_argument('--tb', type=str, default=None)
 parser.add_argument('--reg', type=float, default=0.000001)
+parser.add_argument('--network', type=str, default="LeNet5")
 args = parser.parse_args()
 
 def main():
@@ -38,7 +39,7 @@ def main():
     env = PIEnv(map="data/rsz_heat_map_with_green2.jpg", clean="data/rsz_heat_map.jpg", regularizer=args.reg)
     Agent = DQNAgent(actions=env.action_space.n, batch_size=args.batch, memory=args.buffer, lr=args.lr)
     Agent.set_logger(logs_name=args.log, tb_name=args.tb, slim_log=args.slim_log)
-    # Agent.set_network(SimpleMLP, env.heat_map)
+    Agent.set_network(args.network, env.heat_map)
 
     if args.verbose:
         print('Running on device:', device)
