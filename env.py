@@ -8,7 +8,7 @@ from numpy.random import default_rng
 
 class PIEnv(gymnasium.Env):
 
-    def __init__(self, map, clean=None, regularizer=1e-6):
+    def __init__(self, map, clean=None, regularizer=1e-6, reduce=1.0):
         # list of current vertices in the convex hull, key=id, value=bool
         self.convexhull = {}
         # list of all intersections key=idm value=(x,y)
@@ -20,10 +20,10 @@ class PIEnv(gymnasium.Env):
         self.regularizer = regularizer
 
         image = cv2.imread(map)
-        image = cv2.resize(image, (0, 0), fx=0.5, fy=0.5)
+        image = cv2.resize(image, (0, 0), fx=reduce, fy=reduce)
         if clean is not None:
             self.clean = cv2.imread(clean)
-            self.clean = cv2.resize(self.clean, (0, 0), fx=0.5, fy=0.5)
+            self.clean = cv2.resize(self.clean, (0, 0), fx=reduce, fy=reduce)
         else:
             self.clean = image.copy()
 
