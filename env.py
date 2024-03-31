@@ -8,7 +8,7 @@ from numpy.random import default_rng
 
 class PIEnv(gymnasium.Env):
 
-    def __init__(self, map, clean=None, regularizer=1e-6, reduce=1.0):
+    def __init__(self, map, clean=None, regularizer=1e-1, reduce=1.0):
         # list of current vertices in the convex hull, key=id, value=bool
         self.convexhull = {}
         # list of all intersections key=idm value=(x,y)
@@ -150,32 +150,6 @@ class PIEnv(gymnasium.Env):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    # def render2(self):
-    #     vertices = []
-    #     for vertex_id, state in self.convexhull.items():
-    #         if state:
-    #             vertices.append(self.intersection_dict[vertex_id])
-    #
-    #     new_map = self.clean.copy()
-    #
-    #     # draw convex hull
-    #     convex_hull = cv2.convexHull(np.array(vertices))
-    #     cv2.drawContours(new_map, [convex_hull], -1, (128, 0, 128), 2)
-    #
-    #     # draw intersection centroids with colors
-    #     for int_id, cords in self.intersection_dict.items():
-    #         if self.intersection_state_dict[int_id]:
-    #             cv2.circle(new_map, cords, 5, (255, 255, 255), -1)
-    #         else:
-    #             cv2.circle(new_map, cords, 5, (0, 0, 0), -1)
-    #
-    #     cv2.imshow('Image with Convex Hull Around Perimeter Area', new_map)
-    #     cv2.waitKey(0)
-    #     cv2.destroyAllWindows()
-    #
-    #     return new_map
-    #     # return mask
-
     def _get_state(self):
         """
         Generates the state of the system
@@ -238,8 +212,12 @@ class PIEnv(gymnasium.Env):
         count_v = np.count_nonzero(prev_mask)# * self.heat_map_mean / 2
         value_prev = 0
         relevant = self.heat_map * prev_mask
+        relevant_mask = cv2.threshold(relevant, 0.01, 1., cv2.THRESH_BINARY)[1]
+        blank_area = prev_mask - relevant_mask
+        penalty = np.count_nonzero(blank_area)
         if count_v > 0:
-            sum_v = np.sum(relevant) * np.average(relevant)
+            sum_v = (np.sum(relevant) - self.regularizer * penalty) / np.cbrt(blank_area.size)
+            # sum_v = np.sum(relevant) * np.average(relevant)
             value_prev = sum_v
             # value_prev = sum_v / count_v - (self.regularizer * count_v)
             # print(sum_v, count_v, value_prev)
@@ -261,8 +239,12 @@ class PIEnv(gymnasium.Env):
         count_v = np.count_nonzero(curr_mask)# * self.heat_map_mean / 2
         value_curr = 0
         relevant = self.heat_map * curr_mask
+        relevant_mask = cv2.threshold(relevant, 0.01, 1., cv2.THRESH_BINARY)[1]
+        blank_area = curr_mask - relevant_mask
+        penalty = np.count_nonzero(blank_area)
         if count_v > 0:
-            sum_v = np.sum(relevant) * np.average(relevant)
+            # sum_v = np.sum(relevant) * np.average(relevant)
+            sum_v = (np.sum(relevant) - self.regularizer * penalty) / np.cbrt(blank_area.size)
             value_curr = sum_v
             # value_curr = sum_v / count_v - (self.regularizer * count_v)
             # print(sum_v, count_v, value_curr)
@@ -304,10 +286,16 @@ class PIEnv(gymnasium.Env):
 
         heat_map = (mask / 255.0) * (image_gray / 255.0)
         heat_map = heat_map.astype(np.float32) / np.max(heat_map)
-        heat_map2 = -(heat_map - 1) - (heat_map==0).astype(float)
-        heat_map2 = heat_map2 / np.max(heat_map2)
+        # heat_map2 = -(heat_map - 1) - (heat_map==0).astype(float)
+        # heat_map2 = heat_map2 / np.max(heat_map2)
 
         return heat_map
+
+    def get_convex_set(self):
+        l = list(self.convexhull.keys())
+        chv = np.zeros(self.action_space.n)
+        chv[l] = 1
+        return chv
 
 
 
