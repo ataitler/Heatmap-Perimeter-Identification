@@ -1,6 +1,7 @@
 import argparse
 from env import PIEnv
 from RL.classical import QLearningAgent
+import time
 
 import matplotlib.pyplot as plt
 
@@ -28,7 +29,7 @@ def main():
     num_episodes = args.episodes
     num_steps = args.steps
 
-    env = PIEnv(map="data/rsz_heat_map_with_green.jpg", clean="data/rsz_heat_map.jpg", regularizer=args.reg, reduce=args.reduce)
+    env = PIEnv(map="data/rsz_heat_map_with_green2.jpg", clean="data/rsz_heat_map.jpg", regularizer=args.reg, reduce=args.reduce)
     Agent = QLearningAgent(actions=env.action_space.n, lr=args.lr)
     Agent.load_policy(args.policy)
 
@@ -36,6 +37,7 @@ def main():
     if args.verbose:
         print('Running for', args.episodes, 'episodes with', args.steps, 'steps each. Batch size:', args.batch)
 
+    start_time = time.time()
     all_rewards = []
     for i_episode in range(num_episodes):
         _, _ = env.reset(seed=29)
@@ -83,6 +85,7 @@ def main():
     env.close()
 
     if args.verbose:
+        print("Execution time:", time.time()-start_time)
         # plot the reward graph
         window = 50
         averaged = all_rewards[:int(window/2)]
